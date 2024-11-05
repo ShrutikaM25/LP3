@@ -1,95 +1,122 @@
-#include <iostream>
-#include <vector>
-#include <queue>
-#include <unordered_map>
-#include <string>
+#include<bits/stdc++.h>
+using namespace std ;
 
-using namespace std;
-
-struct Node {
-    char ch;
-    int freq;
-    Node* left;
-    Node* right;
-
-    Node(char character, int frequency) : ch(character), freq(frequency), left(nullptr), right(nullptr) {}
+class Node
+{
+	public:
+	int cnt ;
+	char c ;
+	Node* left ;
+	Node* right ;
+	Node(int cnt ,char c)
+	{
+		this->cnt = cnt ;
+		this->c = c ;	
+		left = right = NULL ;
+	}
+	
+	Node(int cnt , Node* a ,Node* b )
+	{
+		c = '0';
+		this->cnt = cnt ;	
+		this->left = a;
+		this->right = b;
+	}	
 };
 
-
-struct Compare {
-    bool operator()(Node* l, Node* r) {
-        return l->freq > r->freq; 
-    }
+class HuffmanTree
+{
+	public:
+	Node* root;	
 };
 
-void printCodes(Node* root, const string& str, unordered_map<char, string>& huffmanCodes) {
-    if (!root) return;
+class compare
+{
+	public:
+	bool operator()(Node *a ,Node *b)
+	{
+		return (a->cnt < b->cnt);
+	}
+};
+class HuffmanEncoding
+{
+	public:
+	string data;
+	map<char ,int>charfre;
+	priority_queue<Node* ,vector<Node*> ,compare>pq;
+	Node* root ;
+	map<char ,string>mapcode ;
+	
+	HuffmanEncoding(string s)
+	{
+		data = s ;
+		for(char c : data){
+			charfre[c]++;
+		}
+		
+		for(auto it : charfre)
+		{
+			Node* newnode;
+			newnode = new Node(it.second ,it.first);
+			pq.push(newnode);
+		}
+		
+	}
+	
+	void maketree()
+	{
+		while(pq.size() > 1)
+		{
+			Node* a = pq.top() ; pq.pop() ;
+			Node* b = pq.top() ; pq.pop() ;
+			
+			Node* c ;
+			int cnt = a->cnt + b->cnt ;
+			c = new Node(cnt ,a ,b);
+			pq.push(c);
+			
+		}	
+		root = pq.top();
+	}
+	
+	void preorder(Node* root , string s)
+	{
+		if(root == NULL){
+			return ;
+		}
+		if(root->left == NULL && root->right == NULL){
+			mapcode[root->c] = s;
+		}
+		
+		preorder(root->left, s+"0");
+		preorder(root->right, s+"1");
+	}
+	
+	void Encode()
+	{
+		string s;
+		preorder(root ,s);
+	}
+	
+	void showcode()
+	{
+		for(auto it : mapcode)
+		{
+			cout<<it.first<<"->"<<it.second<<endl;
+		}
+	}
+	
+	void performEncoding()
+	{
+		maketree();
+		Encode();
+		showcode();
+	}
+};
 
-    if (!root->left && !root->right) { 
-        huffmanCodes[root->ch] = str;
-    }
-
-    printCodes(root->left, str + "0", huffmanCodes);
-    printCodes(root->right, str + "1", huffmanCodes);
-}
-
-Node* buildHuffmanTree(const unordered_map<char, int>& freq) {
-    priority_queue<Node*, vector<Node*>, Compare> minHeap;
-
-    for (const auto& pair : freq) {
-        minHeap.push(new Node(pair.first, pair.second));
-    }
-
-    while (minHeap.size() > 1) {
-        Node* left = minHeap.top();
-        minHeap.pop();
-        Node* right = minHeap.top();
-        minHeap.pop();
-
-        Node* internalNode = new Node('\0', left->freq + right->freq);
-        internalNode->left = left;
-        internalNode->right = right;
-
-        minHeap.push(internalNode);
-    }
-
-    return minHeap.top(); 
-}
-
-unordered_map<char, string> huffmanEncoding(const string& text) {
-    unordered_map<char, int> freq;
-    for (char ch : text) {
-        freq[ch]++;
-    }
-
-    Node* root = buildHuffmanTree(freq);
-
-    unordered_map<char, string> huffmanCodes;
-    printCodes(root, "", huffmanCodes);
-
-    return huffmanCodes;
-}
-
-string encodeText(const string& text, const unordered_map<char, string>& huffmanCodes) {
-    string encodedText;
-    for (char ch : text) {
-        encodedText += huffmanCodes.at(ch);
-    }
-    return encodedText;
-}
-
-int main() {
-    string text = "this is an example for huffman encoding";
-
-    unordered_map<char, string> huffmanCodes = huffmanEncoding(text);
-
-    cout << "Huffman Codes:\n";
-    for (const auto& pair : huffmanCodes) {
-        cout << pair.first << ": " << pair.second << endl;
-    }
-
-    string encodedText = encodeText(text, huffmanCodes);
-    cout << "\nEncoded Text:\n" << encodedText << endl;
-
-    return 0;
+int main()
+{
+	string s = "hello" ;
+	HuffmanEncoding obj(s) ;
+	obj.performEncoding() ;
 }
