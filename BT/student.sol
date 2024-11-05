@@ -1,51 +1,54 @@
-//
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract StudentRegistry {
+contract StudManagement {
     struct Student {
+        uint id;
         string name;
-        uint rollNo;
+        uint age;
         string course;
     }
 
-    Student[] public students;
-    mapping(uint => uint) private rollNoToIndex;
-    uint public studentCount;
+    Student[] public stud;
 
-    // Events for logging
-    event StudentAdded(string name, uint rollNo, string course);
-    event EtherReceived(address sender, uint amount);
-    event FallbackTriggered(address sender, uint amount);
+    mapping(uint => bool) public StudExists;
 
-    // Function to add a new student
-    function addStudent(string memory name, uint rollNo, string memory course) public {
-        require(rollNoToIndex[rollNo] == 0, "Student with this roll number already exists");
-        students.push(Student(name, rollNo, course));
-        rollNoToIndex[rollNo] = students.length; // Store index + 1 to differentiate from default value
-        studentCount++;
-        emit StudentAdded(name, rollNo, course);
+    event StudentAdded(uint id, string name, uint age, string course);
+    event FallBackTrigger(address sender, uint amount, string message);
+
+    function add_stud(uint _id, string memory _name, uint _age, string memory _course) public {
+        require(!StudExists[_id], "Student with that ID already exists!");
+
+        Student memory newStud = Student({
+            id: _id,
+            name: _name,
+            age: _age,
+            course: _course
+        });
+
+        stud.push(newStud);
+        StudExists[_id] = true;
+
+        emit StudentAdded(_id, _name, _age, _course);
     }
 
-    // Function to get a student by roll number
-    function getStudentByRollNo(uint rollNo) public view returns (string memory name, uint rollNoOut, string memory course) {
-        uint index = rollNoToIndex[rollNo];
-        require(index > 0, "Student with this roll number does not exist");
-        Student storage student = students[index - 1];
-        return (student.name, student.rollNo, student.course);
+    function tot_student() public view returns (uint) {
+        return stud.length;
     }
 
-    // Function to get the total list of students
-    function getAllStudents() public view returns (Student[] memory) {
-        return students;
+    function getStud(uint _index) public view returns (uint, string memory, uint, string memory) {
+        require(_index < stud.length, "Invalid student index!");
+
+        Student memory s = stud[_index];
+
+        return (s.id, s.name, s.age, s.course);
     }
 
-    // Fallback function to handle unexpected function calls
     fallback() external payable {
-        emit FallbackTriggered(msg.sender, msg.value);
+        emit FallBackTrigger(msg.sender, msg.value, "Fallback triggered!");
     }
 
-    // Receive function to accept Ether
     receive() external payable {
-        emit EtherReceived(msg.sender, msg.value);
+        emit FallBackTrigger(msg.sender, msg.value, "Receive function triggered!");
     }
 }
